@@ -15,6 +15,10 @@ export class SensorsInfo {
   //TODO: define instance fields; good idea to keep private and
   //readonly when possible.
 
+  private readonly sensorTypes: SensorType[] = [];
+  private readonly sensors: Sensor[] = [];
+  private readonly sensorReadings: SensorReading[] = [];
+
   constructor() {
     //TODO
   }
@@ -22,6 +26,9 @@ export class SensorsInfo {
   /** Clear out all sensors info from this object.  Return empty array */
   clear() : Errors.Result<string[]> {
     //TODO
+    this.sensorTypes.length = 0;
+    this.sensors.length = 0;
+    this.sensorReadings.length = 0;
     return Errors.okResult([]);
   }
 
@@ -39,6 +46,12 @@ export class SensorsInfo {
     if (!sensorTypeResult.isOk) return sensorTypeResult;
     const sensorType = sensorTypeResult.val;
     //TODO add into this
+    const sendsorTypeIndex = this.sensorTypes.findIndex((tempSensorType: SensorType) => tempSensorType.id === sensorType.id);
+    if(sendsorTypeIndex >= 0) {
+      this.sensorTypes[sendsorTypeIndex] = { ...this.sensorTypes[sendsorTypeIndex], ...sensorType};
+    } else {
+      this.sensorTypes.push(sensorType);
+    }
     return Errors.okResult([sensorType]);
   }
   
@@ -54,7 +67,16 @@ export class SensorsInfo {
    */
   addSensor(req: Record<string, string>): Errors.Result<Sensor[]> {
     //TODO
-    return Errors.okResult([]);
+    const sensorResult = makeSensor(req);
+    if (!sensorResult.isOk) return sensorResult;
+    const sensor = sensorResult.val;
+    const sensorIndex = this.sensors.findIndex((tempSensors: Sensor) => tempSensors.id === sensor.id);
+    if(sensorIndex >= 0) {
+      this.sensors[sensorIndex] = { ...this.sensors[sensorIndex], ...sensor};
+    } else {
+      this.sensors.push(sensor);
+    }
+    return Errors.okResult([sensor]);
   }
 
   /** Add sensor reading defined by req to this.  If there is already
