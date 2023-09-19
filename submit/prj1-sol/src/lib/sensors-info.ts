@@ -49,11 +49,7 @@ export class SensorsInfo {
     if (!sensorTypeResult.isOk) return sensorTypeResult;
     const sensorType = sensorTypeResult.val;
     //TODO add into this
-    if(this.sensorTypes[sensorType.id]) {
-      this.sensorTypes[sensorType.id] = {...this.sensorTypes[sensorType.id], ...sensorType};
-    } else {
-      this.sensorTypes[sensorType.id] = sensorType;
-    }
+    this.sensorTypes[sensorType.id] = sensorType;
     return Errors.okResult([sensorType]);
   }
   
@@ -72,11 +68,7 @@ export class SensorsInfo {
     const sensorResult = makeSensor(req);
     if (!sensorResult.isOk) return sensorResult;
     const sensor = sensorResult.val;
-    if(this.sensors[sensor.id]) {
-      this.sensors[sensor.id] = {...this.sensors[sensor.id], ...sensor};
-    } else {
-      this.sensors[sensor.id] = sensor;
-    }
+    this.sensors[sensor.id] = sensor;
     return Errors.okResult([sensor]);
   }
 
@@ -97,11 +89,7 @@ export class SensorsInfo {
     const sensorReadingResult = makeSensorReading(req);
     if (!sensorReadingResult.isOk) return sensorReadingResult;
     const sensorReading = sensorReadingResult.val;
-    if(this.sensorReadings[sensorReading.sensorId]) {
-      this.sensorReadings[sensorReading.sensorId] = {...this.sensorReadings[sensorReading.sensorId], ...sensorReading};
-    } else {
-      this.sensorReadings[sensorReading.sensorId] = sensorReading;
-    }
+    this.sensorReadings[sensorReading.sensorId] = sensorReading;
     return Errors.okResult([sensorReading]);
   }
 
