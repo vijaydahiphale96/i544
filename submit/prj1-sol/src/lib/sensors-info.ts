@@ -15,20 +15,23 @@ export class SensorsInfo {
   //TODO: define instance fields; good idea to keep private and
   //readonly when possible.
 
-  private readonly sensorTypes: SensorType[] = [];
-  private readonly sensors: Sensor[] = [];
-  private readonly sensorReadings: SensorReading[] = [];
+  private sensorTypes: { [key: string]: SensorType };
+  private sensors: { [key: string]: Sensor };
+  private sensorReadings: { [key: string]: SensorReading };
 
   constructor() {
     //TODO
+    this.sensorTypes = {};
+    this.sensors = {};
+    this.sensorReadings = {};
   }
 
   /** Clear out all sensors info from this object.  Return empty array */
   clear() : Errors.Result<string[]> {
     //TODO
-    this.sensorTypes.length = 0;
-    this.sensors.length = 0;
-    this.sensorReadings.length = 0;
+    this.sensorTypes = {};
+    this.sensors = {};
+    this.sensorReadings = {};
     return Errors.okResult([]);
   }
 
@@ -46,11 +49,10 @@ export class SensorsInfo {
     if (!sensorTypeResult.isOk) return sensorTypeResult;
     const sensorType = sensorTypeResult.val;
     //TODO add into this
-    const sendsorTypeIndex = this.sensorTypes.findIndex((tempSensorType: SensorType) => tempSensorType.id === sensorType.id);
-    if(sendsorTypeIndex >= 0) {
-      this.sensorTypes[sendsorTypeIndex] = { ...this.sensorTypes[sendsorTypeIndex], ...sensorType};
+    if(this.sensorTypes[sensorType.id]) {
+      this.sensorTypes[sensorType.id] = {...this.sensorTypes[sensorType.id], ...sensorType};
     } else {
-      this.sensorTypes.push(sensorType);
+      this.sensorTypes[sensorType.id] = sensorType;
     }
     return Errors.okResult([sensorType]);
   }
@@ -70,11 +72,10 @@ export class SensorsInfo {
     const sensorResult = makeSensor(req);
     if (!sensorResult.isOk) return sensorResult;
     const sensor = sensorResult.val;
-    const sensorIndex = this.sensors.findIndex((tempSensors: Sensor) => tempSensors.id === sensor.id);
-    if(sensorIndex >= 0) {
-      this.sensors[sensorIndex] = { ...this.sensors[sensorIndex], ...sensor};
+    if(this.sensors[sensor.id]) {
+      this.sensors[sensor.id] = {...this.sensors[sensor.id], ...sensor};
     } else {
-      this.sensors.push(sensor);
+      this.sensors[sensor.id] = sensor;
     }
     return Errors.okResult([sensor]);
   }
@@ -93,7 +94,15 @@ export class SensorsInfo {
     : Errors.Result<SensorReading[]> 
   {
     //TODO
-    return Errors.okResult([]);
+    const sensorReadingResult = makeSensorReading(req);
+    if (!sensorReadingResult.isOk) return sensorReadingResult;
+    const sensorReading = sensorReadingResult.val;
+    if(this.sensorReadings[sensorReading.sensorId]) {
+      this.sensorReadings[sensorReading.sensorId] = {...this.sensorReadings[sensorReading.sensorId], ...sensorReading};
+    } else {
+      this.sensorReadings[sensorReading.sensorId] = sensorReading;
+    }
+    return Errors.okResult([sensorReading]);
   }
 
   /** Find sensor-types which satify req. Returns [] if none. 
