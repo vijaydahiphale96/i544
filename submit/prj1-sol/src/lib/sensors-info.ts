@@ -17,7 +17,7 @@ export class SensorsInfo {
 
   private sensorTypes: { [key: string]: SensorType };
   private sensors: { [key: string]: Sensor };
-  private sensorReadings: { [key: string]: SensorReading };
+  private sensorReadings: { [key: string]: SensorReading[] };
 
   constructor() {
     //TODO
@@ -68,8 +68,16 @@ export class SensorsInfo {
     const sensorResult = makeSensor(req);
     if (!sensorResult.isOk) return sensorResult;
     const sensor = sensorResult.val;
-    this.sensors[sensor.id] = sensor;
-    return Errors.okResult([sensor]);
+    if(this.sensorTypes[sensor.sensorTypeId]) {
+      if(sensor.expected.isSubrange(this.sensorTypes[sensor.sensorTypeId].limits)) {
+        this.sensors[sensor.id] = sensor;
+        return Errors.okResult([sensor]);
+      } else {
+        return Errors.errResult('must detect expected range inconsistent with sensor-type', 'BAD_RANGE');
+      }
+    } else {
+      return Errors.errResult('must detect bad sensor-type ID', 'BAD_ID');
+    } 
   }
 
   /** Add sensor reading defined by req to this.  If there is already
@@ -89,7 +97,18 @@ export class SensorsInfo {
     const sensorReadingResult = makeSensorReading(req);
     if (!sensorReadingResult.isOk) return sensorReadingResult;
     const sensorReading = sensorReadingResult.val;
-    this.sensorReadings[sensorReading.sensorId] = sensorReading;
+    if (!this.sensors[sensorReading.sensorId]) {
+      return Errors.errResult('must detect an incorrect sensorId field', 'BAD_ID');
+    } else if(this.sensorReadings[sensorReading.sensorId]) {
+      let index = this.sensorReadings[sensorReading.sensorId].findIndex((currentSensorReading) => currentSensorReading.timestamp === sensorReading.timestamp);
+      if(index >= 0) {
+        this.sensorReadings[sensorReading.sensorId][index] = sensorReading;
+      } else {
+        this.sensorReadings[sensorReading.sensorId].push(sensorReading);
+      }
+    } else {
+      this.sensorReadings[sensorReading.sensorId] = [sensorReading];
+    }
     return Errors.okResult([sensorReading]);
   }
 
