@@ -1,2 +1,7 @@
 # i544
 Programming For the Web
+
+Name:		Vijay Dattu Dahiphale
+B-Number:	B01036763
+Email:		vdahiphale@binghamton.edu
+Github Email: vijaydahiphale96@gmail.com
