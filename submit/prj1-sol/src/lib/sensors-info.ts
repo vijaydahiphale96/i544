@@ -100,6 +100,11 @@ export class SensorsInfo {
     if (!this.sensors[sensorReading.sensorId]) {
       return Errors.errResult('Incorrect sensorId field', 'BAD_ID');
     } else if(this.sensorReadings[sensorReading.sensorId]) {
+      // console.log('this.sensors[sensorReading.sensorId].expected ', this.sensors[sensorReading.sensorId].expected);
+      // console.log('sensorReading ', sensorReading);
+      // if(!this.sensors[sensorReading.sensorId].expected.isWithin(sensorReading.value)) {
+      //   return Errors.errResult('Range inconsistent with Sensor Id', 'BAD_RANGE');
+      // }
       let index = this.sensorReadings[sensorReading.sensorId].findIndex((currentSensorReading) => currentSensorReading.timestamp === sensorReading.timestamp);
       if(index >= 0) {
         this.sensorReadings[sensorReading.sensorId][index] = sensorReading;
