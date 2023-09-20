@@ -121,11 +121,12 @@ export class SensorsInfo {
       validateFindCommand('findSensorTypes', req);
     if (!validResult.isOk) return validResult;
     //TODO
+    const filterReq = validResult.val;
     const filteredSensorTypes: SensorType[] = [];
     for (const currentSensorType of Object.values(this.sensorTypes)) {
       let flag = true;
-      for (const filterFieldName of Object.keys(req)) {
-        if (currentSensorType[filterFieldName as keyof SensorType] && req[filterFieldName] != currentSensorType[filterFieldName as keyof SensorType]) {
+      for (const filterFieldName of Object.keys(filterReq)) {
+        if (currentSensorType[filterFieldName as keyof SensorType] && filterReq[filterFieldName] != currentSensorType[filterFieldName as keyof SensorType]) {
           flag = false;
           break;
         }
@@ -146,12 +147,13 @@ export class SensorsInfo {
     const validResult: Errors.Result<Checked<FlatReq>> =
       validateFindCommand('findSensors', req);
     if (!validResult.isOk) return validResult;
+    const filterReq = validResult.val;
 
     const filteredSensors: Sensor[] = [];
     for (const currentSensor of Object.values(this.sensors)) {
       let flag = true;
-      for (const filterFieldName of Object.keys(req)) {
-        if (currentSensor[filterFieldName as keyof Sensor] && req[filterFieldName] != currentSensor[filterFieldName as keyof Sensor]) {
+      for (const filterFieldName of Object.keys(filterReq)) {
+        if (currentSensor[filterFieldName as keyof Sensor] && filterReq[filterFieldName] != currentSensor[filterFieldName as keyof Sensor]) {
           flag = false;
           break;
         }
@@ -174,7 +176,36 @@ export class SensorsInfo {
    */
   findSensorReadings(req: FlatReq) : Errors.Result<SensorReading[]> {
     //TODO
-    return Errors.okResult([]);
+    const validResult: Errors.Result<Checked<FlatReq>> =
+      validateFindCommand('findSensorReadings', req);
+    if (!validResult.isOk) return validResult;
+    const filterReq = validResult.val;
+
+    const filteredSensorReadings: SensorReading[] = [];
+    const tempSensorReadings: SensorReading[] = this.sensorReadings[filterReq[SensorReadingFindCommands.sensorId]];
+    if(tempSensorReadings) {
+      for (const currentSensorReading of tempSensorReadings) {
+        let flag = true;
+        if(filterReq[SensorReadingFindCommands.minTimestamp] && currentSensorReading.timestamp < parseInt(filterReq[SensorReadingFindCommands.minTimestamp], 10)) {
+          flag = false;
+        }
+        if(filterReq[SensorReadingFindCommands.maxTimestamp] && currentSensorReading.timestamp > parseInt(filterReq[SensorReadingFindCommands.maxTimestamp], 10)) {
+          flag = false;
+        }
+        if(filterReq[SensorReadingFindCommands.minValue] && currentSensorReading.value < parseInt(filterReq[SensorReadingFindCommands.minValue], 10)) {
+          flag = false;
+        }
+        if(filterReq[SensorReadingFindCommands.maxValue] && currentSensorReading.value > parseInt(filterReq[SensorReadingFindCommands.maxValue], 10)) {
+          flag = false;
+        }
+
+        if(flag) {
+          filteredSensorReadings.push(currentSensorReading);
+        }
+      }
+    }
+    filteredSensorReadings.sort((a,b) => a.timestamp - b.timestamp);
+    return Errors.okResult(filteredSensorReadings);
   }
   
 }
@@ -217,3 +248,11 @@ export function addSensorsInfo(sensorTypes: FlatReq[], sensors: FlatReq[],
 /****************************** Utilities ******************************/
 
 //TODO add any utility functions or classes
+
+export enum SensorReadingFindCommands {
+  sensorId = 'sensorId',
+  minTimestamp = 'minTimestamp',
+  maxTimestamp = 'maxTimestamp',
+  minValue = 'minValue',
+  maxValue = 'maxValue'
+}
