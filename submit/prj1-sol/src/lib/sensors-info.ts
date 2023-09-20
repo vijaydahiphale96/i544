@@ -102,7 +102,20 @@ export class SensorsInfo {
       validateFindCommand('findSensorTypes', req);
     if (!validResult.isOk) return validResult;
     //TODO
-    return Errors.okResult([]);
+    const filteredSensorTypes: SensorType[] = [];
+    for (const currentSensorType of Object.values(this.sensorTypes)) {
+      let flag = true;
+      for (const filterFieldName of Object.keys(req)) {
+        if (req[filterFieldName] != currentSensorType[filterFieldName as keyof SensorType]) {
+          flag = false;
+          break;
+        }
+      }
+      if(flag) {
+        filteredSensorTypes.push(currentSensorType);
+      }
+    }
+    return Errors.okResult(filteredSensorTypes);
   }
   
   /** Find sensors which satify req. Returns [] if none. 
@@ -111,7 +124,25 @@ export class SensorsInfo {
    */
   findSensors(req: FlatReq) : Errors.Result<Sensor[]> { 
     //TODO
-    return Errors.okResult([]);
+    const validResult: Errors.Result<Checked<FlatReq>> =
+      validateFindCommand('findSensors', req);
+    if (!validResult.isOk) return validResult;
+
+    const filteredSensors: Sensor[] = [];
+    for (const currentSensor of Object.values(this.sensors)) {
+      let flag = true;
+      for (const filterFieldName of Object.keys(req)) {
+        if (req[filterFieldName] != currentSensor[filterFieldName as keyof Sensor]) {
+          flag = false;
+          break;
+        }
+      }
+      if(flag) {
+        filteredSensors.push(currentSensor);
+      }
+    }
+
+    return Errors.okResult(filteredSensors);
   }
   
   /** Find sensor readings which satify req. Returns [] if none.  Note
