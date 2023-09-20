@@ -125,7 +125,7 @@ export class SensorsInfo {
     for (const currentSensorType of Object.values(this.sensorTypes)) {
       let flag = true;
       for (const filterFieldName of Object.keys(req)) {
-        if (req[filterFieldName] != currentSensorType[filterFieldName as keyof SensorType]) {
+        if (currentSensorType[filterFieldName as keyof SensorType] && req[filterFieldName] != currentSensorType[filterFieldName as keyof SensorType]) {
           flag = false;
           break;
         }
@@ -151,7 +151,7 @@ export class SensorsInfo {
     for (const currentSensor of Object.values(this.sensors)) {
       let flag = true;
       for (const filterFieldName of Object.keys(req)) {
-        if (req[filterFieldName] != currentSensor[filterFieldName as keyof Sensor]) {
+        if (currentSensor[filterFieldName as keyof Sensor] && req[filterFieldName] != currentSensor[filterFieldName as keyof Sensor]) {
           flag = false;
           break;
         }
