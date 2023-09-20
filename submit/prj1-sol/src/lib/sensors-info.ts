@@ -73,10 +73,10 @@ export class SensorsInfo {
         this.sensors[sensor.id] = sensor;
         return Errors.okResult([sensor]);
       } else {
-        return Errors.errResult('must detect expected range inconsistent with sensor-type', 'BAD_RANGE');
+        return Errors.errResult('Range inconsistent with sensor-type', 'BAD_RANGE');
       }
     } else {
-      return Errors.errResult('must detect bad sensor-type ID', 'BAD_ID');
+      return Errors.errResult('Bad sensor-type ID', 'BAD_ID');
     } 
   }
 
@@ -98,7 +98,7 @@ export class SensorsInfo {
     if (!sensorReadingResult.isOk) return sensorReadingResult;
     const sensorReading = sensorReadingResult.val;
     if (!this.sensors[sensorReading.sensorId]) {
-      return Errors.errResult('must detect an incorrect sensorId field', 'BAD_ID');
+      return Errors.errResult('Incorrect sensorId field', 'BAD_ID');
     } else if(this.sensorReadings[sensorReading.sensorId]) {
       let index = this.sensorReadings[sensorReading.sensorId].findIndex((currentSensorReading) => currentSensorReading.timestamp === sensorReading.timestamp);
       if(index >= 0) {
@@ -204,7 +204,7 @@ export class SensorsInfo {
         }
       }
     }
-    filteredSensorReadings.sort((a,b) => a.timestamp - b.timestamp);
+    filteredSensorReadings.sort((a,b) => a?.timestamp - b?.timestamp);
     return Errors.okResult(filteredSensorReadings);
   }
   
