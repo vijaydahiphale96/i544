@@ -73,10 +73,10 @@ export class SensorsInfo {
         this.sensors[sensor.id] = sensor;
         return Errors.okResult([sensor]);
       } else {
-        return Errors.errResult('Range inconsistent with sensor-type', 'BAD_RANGE');
+        return Errors.errResult(`Expected range [${sensor.expected.min}, ${sensor.expected.max}] of sensor '${sensor.id}' is not within the limits [${this.sensorTypes[sensor.sensorTypeId].limits.min}, ${this.sensorTypes[sensor.sensorTypeId].limits.max}] of sensor-type '${sensor.sensorTypeId}'`, 'BAD_RANGE');
       }
     } else {
-      return Errors.errResult('Bad sensor-type ID', 'BAD_ID');
+      return Errors.errResult(`Unknown sensor type '${sensor.sensorTypeId}'`, 'BAD_ID');
     } 
   }
 
@@ -98,13 +98,8 @@ export class SensorsInfo {
     if (!sensorReadingResult.isOk) return sensorReadingResult;
     const sensorReading = sensorReadingResult.val;
     if (!this.sensors[sensorReading.sensorId]) {
-      return Errors.errResult('Incorrect sensorId field', 'BAD_ID');
+      return Errors.errResult(`Unknown sensor '${sensorReading.sensorId}'`, 'BAD_ID');
     } else if(this.sensorReadings[sensorReading.sensorId]) {
-      // console.log('this.sensors[sensorReading.sensorId].expected ', this.sensors[sensorReading.sensorId].expected);
-      // console.log('sensorReading ', sensorReading);
-      // if(!this.sensors[sensorReading.sensorId].expected.isWithin(sensorReading.value)) {
-      //   return Errors.errResult('Range inconsistent with Sensor Id', 'BAD_RANGE');
-      // }
       let index = this.sensorReadings[sensorReading.sensorId].findIndex((currentSensorReading) => currentSensorReading.timestamp === sensorReading.timestamp);
       if(index >= 0) {
         this.sensorReadings[sensorReading.sensorId][index] = sensorReading;
@@ -140,6 +135,15 @@ export class SensorsInfo {
         filteredSensorTypes.push(currentSensorType);
       }
     }
+    filteredSensorTypes.sort((a: SensorType, b: SensorType) => {
+      if(a?.id > b?.id) {
+        return 1;
+      } else if(a?.id < b?.id) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
     return Errors.okResult(filteredSensorTypes);
   }
   
@@ -167,7 +171,15 @@ export class SensorsInfo {
         filteredSensors.push(currentSensor);
       }
     }
-
+    filteredSensors.sort((a: Sensor, b: Sensor) => {
+      if(a?.id > b?.id) {
+        return 1;
+      } else if(a?.id < b?.id) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
     return Errors.okResult(filteredSensors);
   }
   
@@ -209,7 +221,7 @@ export class SensorsInfo {
         }
       }
     }
-    filteredSensorReadings.sort((a,b) => a?.timestamp - b?.timestamp);
+    filteredSensorReadings.sort((a: SensorReading, b: SensorReading) => a?.timestamp - b?.timestamp);
     return Errors.okResult(filteredSensorReadings);
   }
   
