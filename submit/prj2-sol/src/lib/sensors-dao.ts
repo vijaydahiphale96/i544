@@ -32,7 +32,8 @@ export class SensorsDao {
   
   private constructor(
     private readonly client: mongo.MongoClient,
-    private readonly sensorTypes: mongo.Collection<DbSensorType>
+    private readonly sensorTypes: mongo.Collection<DbSensorType>,
+    private readonly sensors: mongo.Collection<DbSensor>
   ) {
     //TODO
   }
@@ -48,8 +49,10 @@ export class SensorsDao {
 	await (new mongo.MongoClient(dbUrl, MONGO_OPTIONS)).connect();
       const db = client.db();
       const sensorTypes = db.collection<DbSensorType>(SENSOR_TYPE_COLLECTION);
+      const sensors = db.collection<DbSensor>(SENSOR_COLLECTION);
       await sensorTypes.createIndex('id');
-      return Errors.okResult(new SensorsDao(client, sensorTypes));
+      await sensors.createIndex('id');
+      return Errors.okResult(new SensorsDao(client, sensorTypes, sensors));
     }
     catch (error) {
       return Errors.errResult('Error while connecting to DB', 'DB');
@@ -77,6 +80,7 @@ export class SensorsDao {
    */
   async clear() : Promise<Errors.Result<void>> {
     try {
+      await this.sensors.deleteMany({});
       await this.sensorTypes.deleteMany({});
       return Errors.VOID_RESULT;
     }
@@ -115,7 +119,19 @@ export class SensorsDao {
    *    DB: a database error was encountered.
    */
   async addSensor(sensor: Sensor) : Promise<Errors.Result<Sensor>> {
-    return Errors.errResult('todo', 'TODO');
+    const dbObj = { ...sensor, _id: sensor.id, };
+    try {
+      const collection = this.sensors;
+      await collection.insertOne(dbObj);
+    }
+    catch (e) {
+      if (e.code === MONGO_DUPLICATE_CODE) {
+        return Errors.errResult('Duplicate Sensor ID', 'EXISTS');
+      } else {
+        return Errors.errResult('Error while adding sensor', 'DB');
+      }
+    }
+    return Errors.okResult(sensor);
   }
 
   /** Add sensorReading to this database.
@@ -161,7 +177,20 @@ export class SensorsDao {
    *    DB: a database error was encountered.
    */
   async findSensors(search: SensorSearch) : Promise<Errors.Result<Sensor[]>> {
-    return Errors.errResult('todo', 'TODO');
+    try {
+      const collection = this.sensors;
+      const projection = { _id: false };
+      const sensors = await collection.find({...search, _id: search.id}, {projection}).toArray();
+      if (sensors) {
+	      return Errors.okResult(sensors);
+      }
+      else {
+	      return Errors.errResult(`No sensor type for id '${search.id}'`,{ code: 'NOT_FOUND' });
+      }
+    }
+    catch (e) {
+      return Errors.errResult('Error while finding sensor', 'DB');
+    }
   }
 
   /** Find sensor readings which satisfy search. Returns [] if none. 
