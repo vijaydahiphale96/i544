@@ -30,7 +30,10 @@ const MONGO_OPTIONS = {
 export class SensorsDao {
 
   
-  private constructor() {
+  private constructor(
+    private readonly client: mongo.MongoClient,
+    private readonly sensorTypes: mongo.Collection<DbSensorType>
+  ) {
     //TODO
   }
 
@@ -40,7 +43,17 @@ export class SensorsDao {
    */
   static async make(dbUrl: string) : Promise<Errors.Result<SensorsDao>> {
     //takes care of all async ops, then call constructor
-    return Errors.errResult('todo', 'TODO');
+    try {
+      const client =
+	await (new mongo.MongoClient(dbUrl, MONGO_OPTIONS)).connect();
+      const db = client.db();
+      const sensorTypes = db.collection<DbSensorType>(SENSOR_TYPE_COLLECTION);
+      await sensorTypes.createIndex('id');
+      return Errors.okResult(new SensorsDao(client, sensorTypes));
+    }
+    catch (error) {
+      return Errors.errResult('Error while connecting to DB', 'DB');
+    }
   }
 
   /** Release all resources held by this dao.
@@ -49,7 +62,13 @@ export class SensorsDao {
    *    DB: a database error was encountered.
    */
   async close() : Promise<Errors.Result<void>> {
-    return Errors.errResult('todo', 'TODO');
+    try {
+      await this.client.close();
+      return Errors.VOID_RESULT;
+    }
+    catch (e) {
+      return Errors.errResult('Error while closing DB connection', 'DB');
+    }
   }
 
   /** Clear out all sensor info in this database
@@ -57,7 +76,13 @@ export class SensorsDao {
    *    DB: a database error was encountered.
    */
   async clear() : Promise<Errors.Result<void>> {
-    return Errors.errResult('todo', 'TODO');
+    try {
+      await this.sensorTypes.deleteMany({});
+      return Errors.VOID_RESULT;
+    }
+    catch (e) {
+      return Errors.errResult('Error while clearing DB', 'DB');
+    }
   }
 
 
@@ -69,7 +94,19 @@ export class SensorsDao {
   async addSensorType(sensorType: SensorType)
     : Promise<Errors.Result<SensorType>>
   {
-    return Errors.errResult('todo', 'TODO');
+    const dbObj = { ...sensorType, _id: sensorType.id, };
+    try {
+      const collection = this.sensorTypes;
+      await collection.insertOne(dbObj);
+    }
+    catch (e) {
+      if (e.code === MONGO_DUPLICATE_CODE) {
+        return Errors.errResult('Duplicate Sensor type ID', 'EXISTS');
+      } else {
+        return Errors.errResult('Error while adding sensorType', 'DB');
+      }
+    }
+    return Errors.okResult(sensorType);
   }
 
   /** Add sensor to this database.
@@ -101,7 +138,20 @@ export class SensorsDao {
   async findSensorTypes(search: SensorTypeSearch)
     : Promise<Errors.Result<SensorType[]>> 
   {
-    return Errors.errResult('todo', 'TODO');
+    try {
+      const collection = this.sensorTypes;
+      const projection = { _id: false };
+      const sensorType = await collection.find({...search, _id: search.id}, {projection}).toArray();
+      if (sensorType) {
+	      return Errors.okResult(sensorType);
+      }
+      else {
+	      return Errors.errResult(`No sensor type for id '${search.id}'`,{ code: 'NOT_FOUND' });
+      }
+    }
+    catch (e) {
+      return Errors.errResult('Error while finding sensor type', 'DB');
+    }
   }
   
   /** Find sensors which satify search. Returns [] if none. 
@@ -129,4 +179,7 @@ export class SensorsDao {
 
 //mongo err.code on inserting duplicate entry
 const MONGO_DUPLICATE_CODE = 11000;
+const SENSOR_TYPE_COLLECTION = 'sensor_type';
+const SENSOR_COLLECTION = 'sensor';
+
 
