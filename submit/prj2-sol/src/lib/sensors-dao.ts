@@ -222,7 +222,41 @@ export class SensorsDao {
   async findSensorReadings(search: SensorReadingSearch)
     : Promise<Errors.Result<SensorReading[]>> 
   {
-    return Errors.errResult('todo', 'TODO');
+    try {
+      const collection = this.sensorReadings;
+      const projection = { _id: false };
+      const query = this.getFindSensorReadingsQuery(search);
+      const sensorReadings = await collection.find(query, {projection}).sort({_id: 1}).toArray();
+      if (sensorReadings) {
+	      return Errors.okResult(sensorReadings);
+      }
+      else {
+	      return Errors.errResult(`No sensor reading for sensor id '${search.sensorId}'`,{ code: 'NOT_FOUND' });
+      }
+    }
+    catch (e) {
+      return Errors.errResult('Error while finding sensor', 'DB');
+    }
+  }
+
+  getFindSensorReadingsQuery(search: SensorReadingSearch) {
+    const query: SensorReadingQuery = {};
+    if(search.sensorId) {
+      query.sensorId = search.sensorId;
+    }
+    if(search.minTimestamp !== undefined) {
+      query.timestamp = {'$gte': search.minTimestamp};
+    }
+    if(search.maxTimestamp !== undefined) {
+      query.timestamp = {...query.timestamp, '$lte': search.maxTimestamp};
+    }
+    if(search.minValue !== undefined) {
+      query.value = {'$gte': search.minValue};
+    }
+    if(search.maxValue !== undefined) {
+      query.value = {...query.value, '$lte': search.maxValue};
+    }
+    return query;
   }
   
 } //SensorsDao
@@ -232,5 +266,11 @@ const MONGO_DUPLICATE_CODE = 11000;
 const SENSOR_TYPE_COLLECTION = 'sensor_type';
 const SENSOR_COLLECTION = 'sensor';
 const SENSOR_READING_COLLECTION = 'sensor_reading';
+
+export interface SensorReadingQuery {
+  sensorId?: string;
+  timestamp?: {[key: string]: number};
+  value?: {[key: string]: number};
+}
 
 
