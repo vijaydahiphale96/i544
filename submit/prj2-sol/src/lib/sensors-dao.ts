@@ -239,7 +239,7 @@ export class SensorsDao {
     }
   }
 
-  getFindSensorReadingsQuery(search: SensorReadingSearch) {
+  getFindSensorReadingsQuery(search: SensorReadingSearch): SensorReadingQuery {
     const query: SensorReadingQuery = {};
     if(search.sensorId) {
       query.sensorId = search.sensorId;
