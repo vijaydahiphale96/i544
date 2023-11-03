@@ -62,6 +62,11 @@ function setupRoutes(app: Express.Application) {
   app.get(`${base}/sensor-types/:sensorTypeId`, doGetSensorType(app));
   app.get(`${base}/sensor-types`, doFindSensorTypes(app));
 
+  app.put(`${base}/sensors`, doCreateSensor(app));
+  app.post(`${base}/sensors`, doCreateSensor(app));
+  app.get(`${base}/sensors/:sensorId`, doGetSensor(app));
+  app.get(`${base}/sensors`, doFindSensors(app));
+
   //must be last
   app.use(do404(app));  //custom handler for page not found
   app.use(doErrors(app)); //custom handler for internal errors
@@ -108,6 +113,7 @@ function doGetSensorType(app: Express.Application) {
       } else {
         const message = `Sensor-type with id - ${sensorTypeId} not found!!`;
         const result = {
+          isOk: false,
           status: STATUS.NOT_FOUND,
           errors: [	{ options: { code: 'NOT_FOUND' }, message, }, ],
         };
@@ -133,6 +139,74 @@ function doFindSensorTypes(app: Express.Application) {
       const q1 = { ...q, count: count + 1, index, };
       
       const result = await app.locals.sensorsInfo.findSensorTypes(q1);
+      if (!result.isOk) throw result;
+      const response = pagedResult<SensorType>(req, 'id', result.val);
+      res.json(response);
+    }
+    catch(err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doCreateSensor(app: Express.Application) {
+  return (async function(req: Express.Request, res: Express.Response) {
+    try {
+      const result = await app.locals.sensorsInfo.addSensor(req.body);
+      if (!result.isOk) throw result;
+      const registeredUser = result.val;
+      const { id } = registeredUser;
+      res.location(selfHref(req, id));
+      const response =
+	    selfResult<Sensor>(req, registeredUser, STATUS.CREATED);
+      res.status(STATUS.CREATED).json(response);
+    }
+    catch(err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doGetSensor(app: Express.Application) {
+  return (async function(req: Express.Request, res: Express.Response) {
+    try {
+      const { sensorId } = req.params;
+      const result = await app.locals.sensorsInfo.findSensors({id: sensorId});
+      if (!result.isOk) throw result;
+      if(result?.val?.length == 1) {
+        const response = selfResult<SensorType>(req, result.val[0]);
+        res.json(response);
+      } else {
+        const message = `Sensor with id - ${sensorId} not found!!`;
+        const result = {
+          isOk: false,
+          status: STATUS.NOT_FOUND,
+          errors: [	{ options: { code: 'NOT_FOUND' }, message, }, ],
+        };
+        res.status(404).json(result);
+      }
+    }
+    catch(err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doFindSensors(app: Express.Application) {
+  return (async function(req: RequestWithQuery, res: Express.Response) {
+    try {
+      const q = { ...req.query };      
+      const index = Number(q.index ??  DEFAULT_INDEX);
+      const count = Number(q.count ??  DEFAULT_COUNT);
+
+      //by requesting one extra result, we ensure that we generate the
+      //next link only if there are more than count remaining results
+      const q1 = { ...q, count: count + 1, index, };
+      
+      const result = await app.locals.sensorsInfo.findSensors(q1);
       if (!result.isOk) throw result;
       const response = pagedResult<SensorType>(req, 'id', result.val);
       res.json(response);
