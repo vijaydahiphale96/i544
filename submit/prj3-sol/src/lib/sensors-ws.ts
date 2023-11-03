@@ -58,6 +58,7 @@ function setupRoutes(app: Express.Application) {
 
   //TODO: add routes
   app.put(`${base}/sensor-types`, doCreateSensorType(app));
+  app.post(`${base}/sensor-types`, doCreateSensorType(app));
   app.get(`${base}/sensor-types/:sensorTypeId`, doGetSensorType(app));
   app.get(`${base}/sensor-types`, doFindSensorTypes(app));
 
