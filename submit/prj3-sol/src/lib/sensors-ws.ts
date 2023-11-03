@@ -57,6 +57,9 @@ function setupRoutes(app: Express.Application) {
   //app.use(doTrace(app));
 
   //TODO: add routes
+  app.put(`${base}/sensor-types`, doCreateSensorType(app));
+  app.get(`${base}/sensor-types/:sensorTypeId`, doGetSensorType(app));
+  app.get(`${base}/sensor-types`, doFindSensorTypes(app));
 
   //must be last
   app.use(do404(app));  //custom handler for page not found
@@ -70,6 +73,73 @@ function doTrace(app: Express.Application) {
 			 next: Express.NextFunction) {
     console.log(req.method, req.originalUrl);
     next();
+  });
+}
+
+function doCreateSensorType(app: Express.Application) {
+  return (async function(req: Express.Request, res: Express.Response) {
+    try {
+      const result = await app.locals.sensorsInfo.addSensorType(req.body);
+      if (!result.isOk) throw result;
+      const registeredUser = result.val;
+      const { id } = registeredUser;
+      res.location(selfHref(req, id));
+      const response =
+	    selfResult<SensorType>(req, registeredUser, STATUS.CREATED);
+      res.status(STATUS.CREATED).json(response);
+    }
+    catch(err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doGetSensorType(app: Express.Application) {
+  return (async function(req: Express.Request, res: Express.Response) {
+    try {
+      const { sensorTypeId } = req.params;
+      const result = await app.locals.sensorsInfo.findSensorTypes({id: sensorTypeId});
+      if (!result.isOk) throw result;
+      if(result?.val?.length == 1) {
+        const response = selfResult<SensorType>(req, result.val[0]);
+        res.json(response);
+      } else {
+        const message = `Sensor-type with id - ${sensorTypeId} not found!!`;
+        const result = {
+          status: STATUS.NOT_FOUND,
+          errors: [	{ options: { code: 'NOT_FOUND' }, message, }, ],
+        };
+        res.status(404).json(result);
+      }
+    }
+    catch(err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doFindSensorTypes(app: Express.Application) {
+  return (async function(req: RequestWithQuery, res: Express.Response) {
+    try {
+      const q = { ...req.query };      
+      const index = Number(q.index ??  DEFAULT_INDEX);
+      const count = Number(q.count ??  DEFAULT_COUNT);
+
+      //by requesting one extra result, we ensure that we generate the
+      //next link only if there are more than count remaining results
+      const q1 = { ...q, count: count + 1, index, };
+      
+      const result = await app.locals.sensorsInfo.findSensorTypes(q1);
+      if (!result.isOk) throw result;
+      const response = pagedResult<SensorType>(req, 'id', result.val);
+      res.json(response);
+    }
+    catch(err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
   });
 }
 
