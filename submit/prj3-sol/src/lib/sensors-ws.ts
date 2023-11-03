@@ -87,11 +87,11 @@ function doCreateSensorType(app: Express.Application) {
     try {
       const result = await app.locals.sensorsInfo.addSensorType(req.body);
       if (!result.isOk) throw result;
-      const registeredUser = result.val;
-      const { id } = registeredUser;
+      const addedSensorType = result.val;
+      const { id } = addedSensorType;
       res.location(selfHref(req, id));
       const response =
-	    selfResult<SensorType>(req, registeredUser, STATUS.CREATED);
+	    selfResult<SensorType>(req, addedSensorType, STATUS.CREATED);
       res.status(STATUS.CREATED).json(response);
     }
     catch(err) {
@@ -155,11 +155,11 @@ function doCreateSensor(app: Express.Application) {
     try {
       const result = await app.locals.sensorsInfo.addSensor(req.body);
       if (!result.isOk) throw result;
-      const registeredUser = result.val;
-      const { id } = registeredUser;
+      const addedSensor = result.val;
+      const { id } = addedSensor;
       res.location(selfHref(req, id));
       const response =
-	    selfResult<Sensor>(req, registeredUser, STATUS.CREATED);
+	    selfResult<Sensor>(req, addedSensor, STATUS.CREATED);
       res.status(STATUS.CREATED).json(response);
     }
     catch(err) {
