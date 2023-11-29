@@ -8,7 +8,57 @@ export default function makeApp(wsUrl: string) {
   const ws = makeSensorsWs(wsUrl);
   init();
   //TODO: add call to select initial tab and calls to set up
+  selectTab('addSensorType');
   //form submit listeners
+  addSensorTypeListener('addSensorType');
+  addSensorListener('addSensor');
+  findSensorTypeListener('findSensorTypes');
+  findSensorsListener('findSensors');
+}
+
+function selectTab(rootId:string) {
+  document.getElementById(rootId + '-tab')?.setAttribute('checked', 'checked');
+}
+
+function getSubmitButtonEle(rootId: string) {
+  let element: HTMLElement = document.getElementById(rootId + '-form')!;
+  return [...element.getElementsByTagName('button')!][0];
+}
+
+function addSensorTypeListener(rootId: string) {
+  let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
+  mySubButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    clearErrors(rootId);
+    alert(rootId + ' Button clicked!');
+  });
+}
+
+function addSensorListener(rootId: string) {
+  let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
+  mySubButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    clearErrors(rootId);
+    alert(rootId + ' Button clicked!');
+  });
+}
+
+function findSensorTypeListener(rootId: string) {
+  let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
+  mySubButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    clearErrors(rootId);
+    alert(rootId + ' Button clicked!');
+  });
+}
+
+function findSensorsListener(rootId: string) {
+  let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
+  mySubButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    clearErrors(rootId);
+    alert(rootId + ' Button clicked!');
+  });
 }
 
 
