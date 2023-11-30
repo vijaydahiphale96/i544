@@ -103,12 +103,19 @@ function findSensorTypeListener(rootId: string, ws: SensorsWs) {
   });
 }
 
+async function getFindData(rootId: string, ws: SensorsWs, pageLink: string): Promise<Errors.Result<PagedValues>> {
+  if ('findSensorTypes' === rootId) {
+    return await ws.findSensorTypesByRelLink(pageLink);
+  } else {
+    return await ws.findSensorsByRelLink(pageLink);
+  }
+}
+
 // Function to handle the click event on the '>>' button
 async function handleScrollClick(event: MouseEvent, rootId: string, ws: SensorsWs, pageLink: string) {
   event.preventDefault();
   clearErrors(rootId);
-  // let result = await ws.findSensorTypesByRelLink(pageLink);
-  let result = await ws.findSensorsByRelLink(pageLink);
+  let result =  await getFindData(rootId, ws, pageLink);
   if (!result.isOk) {
     displayErrors(rootId, result.errors);
   } else {
