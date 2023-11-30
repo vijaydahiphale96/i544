@@ -40,37 +40,6 @@ function addSensorTypeListener(rootId: string, ws: SensorsWs) {
   });
 }
 
-function showAddSuccessData(rootId: string, successData: {[key: string]: string}) {
-  let divEle = document.getElementById(rootId + '-results')!;
-  divEle.innerHTML = '';
-  let dlEle = makeDlElement(successData);
-  divEle.appendChild(dlEle);
-}
-
-function showFindSuccessData(rootId: string, pagedValues: PagedValues) {
-  const ulEle = document.getElementById(rootId + '-results')!;
-  ulEle.innerHTML = '';
-  for (const searchDataItem of pagedValues?.values) {
-    // const liEle = makeElement('li', {}, '');
-    // const dlEle = makeDlElement(searchDataItem);
-    // liEle.appendChild(dlEle);
-    // ulEle.appendChild(liEle);
-    const dlEle = makeDlElement(searchDataItem);
-    ulEle.appendChild(dlEle);
-  }
-}
-
-function makeDlElement(successData: {[key: string]: string}) {
-  let dl = makeElement('dl', {class: 'result'}, '');
-  for (const [key, value] of Object.entries(successData)) {
-    const dt = makeElement('dt', {}, key);
-    const dd = makeElement('dd', {}, value);
-    dl.appendChild(dt);
-    dl.appendChild(dd);
-  }
-  return dl;
-}
-
 function addSensorListener(rootId: string, ws: SensorsWs) {
   let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
   let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
@@ -84,6 +53,24 @@ function addSensorListener(rootId: string, ws: SensorsWs) {
       showAddSuccessData(rootId, result?.val);
     }
   });
+}
+
+function showAddSuccessData(rootId: string, successData: {[key: string]: string}) {
+  let divEle = document.getElementById(rootId + '-results')!;
+  divEle.innerHTML = '';
+  let dlEle = makeDlElement(successData);
+  divEle.appendChild(dlEle);
+}
+
+function makeDlElement(successData: {[key: string]: string}) {
+  let dl = makeElement('dl', {class: 'result'}, '');
+  for (const [key, value] of Object.entries(successData)) {
+    const dt = makeElement('dt', {}, key);
+    const dd = makeElement('dd', {}, value);
+    dl.appendChild(dt);
+    dl.appendChild(dd);
+  }
+  return dl;
 }
 
 function findSensorTypeListener(rootId: string, ws: SensorsWs) {
@@ -103,11 +90,33 @@ function findSensorTypeListener(rootId: string, ws: SensorsWs) {
   });
 }
 
-async function getFindData(rootId: string, ws: SensorsWs, pageLink: string): Promise<Errors.Result<PagedValues>> {
-  if ('findSensorTypes' === rootId) {
-    return await ws.findSensorTypesByRelLink(pageLink);
-  } else {
-    return await ws.findSensorsByRelLink(pageLink);
+function findSensorsListener(rootId: string, ws: SensorsWs) {
+  let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
+  let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
+  mySubButton.addEventListener('click', async function (event) {
+    event.preventDefault();
+    clearErrors(rootId);
+    let result = await ws.findSensorsByReq(getFormData(formElement));
+    if(!result.isOk) {
+      displayErrors(rootId, result.errors);
+    } else {
+      showFindSuccessData(rootId, result?.val);
+      setEventHandlersOnClones(rootId, ws, result?.val?.prev, result?.val?.next);
+      updateScrollControls(rootId, result?.val?.prev, result?.val?.next);
+    }
+  });
+}
+
+function showFindSuccessData(rootId: string, pagedValues: PagedValues) {
+  const ulEle = document.getElementById(rootId + '-results')!;
+  ulEle.innerHTML = '';
+  for (const searchDataItem of pagedValues?.values) {
+    // const liEle = makeElement('li', {}, '');
+    // const dlEle = makeDlElement(searchDataItem);
+    // liEle.appendChild(dlEle);
+    // ulEle.appendChild(liEle);
+    const dlEle = makeDlElement(searchDataItem);
+    ulEle.appendChild(dlEle);
   }
 }
 
@@ -122,6 +131,14 @@ async function handleScrollClick(event: MouseEvent, rootId: string, ws: SensorsW
     showFindSuccessData(rootId, result?.val);
     setEventHandlersOnClones(rootId, ws, result?.val?.prev, result?.val?.next);
     updateScrollControls(rootId, result?.val?.prev, result?.val?.next);
+  }
+}
+
+async function getFindData(rootId: string, ws: SensorsWs, pageLink: string): Promise<Errors.Result<PagedValues>> {
+  if ('findSensorTypes' === rootId) {
+    return await ws.findSensorTypesByRelLink(pageLink);
+  } else {
+    return await ws.findSensorsByRelLink(pageLink);
   }
 }
 
@@ -160,24 +177,6 @@ function updateScrollControls(rootId: string, prev: string | undefined, next: st
     setVisibility(nextBtn, !!next);
   });
 }
-
-function findSensorsListener(rootId: string, ws: SensorsWs) {
-  let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
-  let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
-  mySubButton.addEventListener('click', async function (event) {
-    event.preventDefault();
-    clearErrors(rootId);
-    let result = await ws.findSensorsByReq(getFormData(formElement));
-    if(!result.isOk) {
-      displayErrors(rootId, result.errors);
-    } else {
-      showFindSuccessData(rootId, result?.val);
-      setEventHandlersOnClones(rootId, ws, result?.val?.prev, result?.val?.next);
-      updateScrollControls(rootId, result?.val?.prev, result?.val?.next);
-    }
-  });
-}
-
 
 //TODO: functions to select a tab and set up form submit listeners
 
