@@ -144,37 +144,41 @@ async function getFindData(rootId: string, ws: SensorsWs, pageLink: string): Pro
 
 function setEventHandlersOnClones(rootId: string, ws: SensorsWs, prev: string = '', next: string = '') {
   const tabEle = document.getElementById(rootId + '-content')!;
-  const scrollContainer = tabEle.querySelector('.scroll')!;
-  const prevBtns = scrollContainer.querySelectorAll('[rel="prev"]');
-  const nextBtns = scrollContainer.querySelectorAll('[rel="next"]');
+  const scrollContainers = tabEle.querySelectorAll('.scroll')!;
+  scrollContainers.forEach((scrollContainer) => {
+    const prevBtns = scrollContainer.querySelectorAll('[rel="prev"]');
+    const nextBtns = scrollContainer.querySelectorAll('[rel="next"]');
 
-  prevBtns.forEach((prevBtn) => {
-    const prevBtnClone = prevBtn.cloneNode(true);
-    prevBtnClone.addEventListener('click', (event: MouseEvent) => handleScrollClick(event, rootId, ws, prev));
-    prevBtn.replaceWith(prevBtnClone);
-  });
+    prevBtns.forEach((prevBtn) => {
+      const prevBtnClone = prevBtn.cloneNode(true);
+      prevBtnClone.addEventListener('click', (event: MouseEvent) => handleScrollClick(event, rootId, ws, prev));
+      prevBtn.replaceWith(prevBtnClone);
+    });
 
-  nextBtns.forEach((nextBtn) => {
-    const nextBtnClone = nextBtn.cloneNode(true);
-    nextBtnClone.addEventListener('click', (event: MouseEvent) => handleScrollClick(event, rootId, ws, next));
-    nextBtn.replaceWith(nextBtnClone);
+    nextBtns.forEach((nextBtn) => {
+      const nextBtnClone = nextBtn.cloneNode(true);
+      nextBtnClone.addEventListener('click', (event: MouseEvent) => handleScrollClick(event, rootId, ws, next));
+      nextBtn.replaceWith(nextBtnClone);
+    });
   });
 }
 
 function updateScrollControls(rootId: string, prev: string | undefined, next: string | undefined) {
   const tabEle = document.getElementById(rootId + '-content')!;
-  const scrollContainer = tabEle.querySelector('.scroll')!;
-  const prevBtns = scrollContainer.querySelectorAll('[rel="prev"]');
-  const nextBtns = scrollContainer.querySelectorAll('[rel="next"]');
+  const scrollContainers = tabEle.querySelectorAll('.scroll')!;
+  scrollContainers.forEach((scrollContainer) => {
+    const prevBtns = scrollContainer.querySelectorAll('[rel="prev"]');
+    const nextBtns = scrollContainer.querySelectorAll('[rel="next"]');
 
-  // Show/hide '<<' buttons based on 'prev' property
-  prevBtns.forEach((prevBtn: HTMLElement) => {
-    setVisibility(prevBtn, !!prev);
-  });
+    // Show/hide '<<' buttons based on 'prev' property
+    prevBtns.forEach((prevBtn: HTMLElement) => {
+      setVisibility(prevBtn, !!prev);
+    });
 
-  // Show/hide '>>' buttons based on 'next' property
-  nextBtns.forEach((nextBtn: HTMLElement) => {
-    setVisibility(nextBtn, !!next);
+    // Show/hide '>>' buttons based on 'next' property
+    nextBtns.forEach((nextBtn: HTMLElement) => {
+      setVisibility(nextBtn, !!next);
+    });
   });
 }
 
