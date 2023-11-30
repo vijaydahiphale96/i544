@@ -35,14 +35,31 @@ function addSensorTypeListener(rootId: string, ws: SensorsWs) {
     if(!result.isOk) {
       displayErrors(rootId, result.errors);
     } else {
-      showSuccessData(rootId, result?.val);
+      showAddSuccessData(rootId, result?.val);
     }
   });
 }
 
-function showSuccessData(rootId: string, successData: {[key: string]: string}) {
+function showAddSuccessData(rootId: string, successData: {[key: string]: string}) {
   let divEle = document.getElementById(rootId + '-results')!;
   divEle.innerHTML = '';
+  let dlEle = makeDlElement(successData);
+  divEle.appendChild(dlEle);
+}
+
+function showFindSuccessData(rootId: string, pagedValues: PagedValues) {
+  const ulEle = document.getElementById(rootId + '-results')!;
+  for (const searchDataItem of pagedValues?.values) {
+    // const liEle = makeElement('li', {}, '');
+    // const dlEle = makeDlElement(searchDataItem);
+    // liEle.appendChild(dlEle);
+    // ulEle.appendChild(liEle);
+    const dlEle = makeDlElement(searchDataItem);
+    ulEle.appendChild(dlEle);
+  }
+}
+
+function makeDlElement(successData: {[key: string]: string}) {
   let dl = makeElement('dl', {class: 'result'}, '');
   for (const [key, value] of Object.entries(successData)) {
     const dt = makeElement('dt', {}, key);
@@ -50,7 +67,7 @@ function showSuccessData(rootId: string, successData: {[key: string]: string}) {
     dl.appendChild(dt);
     dl.appendChild(dd);
   }
-  divEle.appendChild(dl);
+  return dl;
 }
 
 function addSensorListener(rootId: string, ws: SensorsWs) {
@@ -63,7 +80,7 @@ function addSensorListener(rootId: string, ws: SensorsWs) {
     if(!result.isOk) {
       displayErrors(rootId, result.errors);
     } else {
-      showSuccessData(rootId, result?.val);
+      showAddSuccessData(rootId, result?.val);
     }
   });
 }
@@ -71,20 +88,30 @@ function addSensorListener(rootId: string, ws: SensorsWs) {
 function findSensorTypeListener(rootId: string, ws: SensorsWs) {
   let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
   let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
-  mySubButton.addEventListener('click', function (event) {
+  mySubButton.addEventListener('click', async function (event) {
     event.preventDefault();
     clearErrors(rootId);
-    ws.findSensorTypesByReq(getFormData(formElement));
+    let result = await ws.findSensorTypesByReq(getFormData(formElement));
+    if(!result.isOk) {
+      displayErrors(rootId, result.errors);
+    } else {
+      showFindSuccessData(rootId, result?.val);
+    }
   });
 }
 
 function findSensorsListener(rootId: string, ws: SensorsWs) {
   let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
   let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
-  mySubButton.addEventListener('click', function (event) {
+  mySubButton.addEventListener('click', async function (event) {
     event.preventDefault();
     clearErrors(rootId);
-    ws.findSensorsByReq(getFormData(formElement));
+    let result = await ws.findSensorsByReq(getFormData(formElement));
+    if(!result.isOk) {
+      displayErrors(rootId, result.errors);
+    } else {
+      showFindSuccessData(rootId, result?.val);
+    }
   });
 }
 

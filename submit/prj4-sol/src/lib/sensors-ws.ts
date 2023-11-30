@@ -140,7 +140,34 @@ async function findData<T>(url: URL,
 			   displayFn: (t: T) => Record<string, string>)
   : Promise<Errors.Result<PagedValues>>
 {
-  return Errors.errResult('TODO');
+  try {
+    const result = await
+      (await fetch(url, {
+        method: 'GET'
+      })).json();
+    if (!result.isOk) {
+      return new Errors.ErrResult(result.errors);
+    }
+
+    let res: PagedValues = {
+      values: []
+    };;
+    if(result?.links?.prev?.href) {
+      res.prev = result?.links?.prev?.href;
+    }
+    if(result?.links?.next?.href) {
+      res.next = result?.links?.next?.href;
+    }
+  
+    for (const searchDataItem of result?.result) {
+      res.values.push(displayFn(searchDataItem.result))
+    }
+
+    return Errors.okResult(res);
+  }
+  catch (err) {
+    return Errors.errResult(err);
+  }
 }
 
 /** Given a baseUrl and req, return a URL object which contains
