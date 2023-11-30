@@ -10,10 +10,10 @@ export default function makeApp(wsUrl: string) {
   //TODO: add call to select initial tab and calls to set up
   selectTab('addSensorType');
   //form submit listeners
-  addSensorTypeListener('addSensorType');
-  addSensorListener('addSensor');
-  findSensorTypeListener('findSensorTypes');
-  findSensorsListener('findSensors');
+  addSensorTypeListener('addSensorType', ws);
+  addSensorListener('addSensor', ws);
+  findSensorTypeListener('findSensorTypes', ws);
+  findSensorsListener('findSensors', ws);
 }
 
 function selectTab(rootId:string) {
@@ -25,39 +25,66 @@ function getSubmitButtonEle(rootId: string) {
   return [...element.getElementsByTagName('button')!][0];
 }
 
-function addSensorTypeListener(rootId: string) {
+function addSensorTypeListener(rootId: string, ws: SensorsWs) {
+  let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
   let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
-  mySubButton.addEventListener('click', function (event) {
+  mySubButton.addEventListener('click', async function (event) {
     event.preventDefault();
     clearErrors(rootId);
-    alert(rootId + ' Button clicked!');
+    let result = await ws.addSensorType(getFormData(formElement));
+    if(!result.isOk) {
+      displayErrors(rootId, result.errors);
+    } else {
+      showSuccessData(rootId, result?.val);
+    }
   });
 }
 
-function addSensorListener(rootId: string) {
+function showSuccessData(rootId: string, successData: {[key: string]: string}) {
+  let divEle = document.getElementById(rootId + '-results')!;
+  divEle.innerHTML = '';
+  let dl = makeElement('dl', {class: 'result'}, '');
+  for (const [key, value] of Object.entries(successData)) {
+    const dt = makeElement('dt', {}, key);
+    const dd = makeElement('dd', {}, value);
+    dl.appendChild(dt);
+    dl.appendChild(dd);
+  }
+  divEle.appendChild(dl);
+}
+
+function addSensorListener(rootId: string, ws: SensorsWs) {
+  let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
   let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
-  mySubButton.addEventListener('click', function (event) {
+  mySubButton.addEventListener('click', async function (event) {
     event.preventDefault();
     clearErrors(rootId);
-    alert(rootId + ' Button clicked!');
+    let result = await ws.addSensor(getFormData(formElement));
+    if(!result.isOk) {
+      displayErrors(rootId, result.errors);
+    } else {
+      showSuccessData(rootId, result?.val);
+    }
   });
 }
 
-function findSensorTypeListener(rootId: string) {
+function findSensorTypeListener(rootId: string, ws: SensorsWs) {
+  let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
   let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
   mySubButton.addEventListener('click', function (event) {
     event.preventDefault();
     clearErrors(rootId);
-    alert(rootId + ' Button clicked!');
+    ws.findSensorTypesByReq(getFormData(formElement));
   });
 }
 
-function findSensorsListener(rootId: string) {
+function findSensorsListener(rootId: string, ws: SensorsWs) {
+  let formElement: HTMLFormElement = document.querySelector('#' + rootId + '-form')!;
   let mySubButton: HTMLButtonElement = getSubmitButtonEle(rootId);
   mySubButton.addEventListener('click', function (event) {
     event.preventDefault();
     clearErrors(rootId);
-    alert(rootId + ' Button clicked!');
+    ws.findSensorsByReq(getFormData(formElement));
   });
 }
 

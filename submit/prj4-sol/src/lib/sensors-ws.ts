@@ -104,7 +104,21 @@ async function addData<T>(url: URL, data: Record<string, string>,
 			  displayFn: (t: T) => Record<string, string>)
   : Promise<Errors.Result<Record<string, string>>>
 {
-  return Errors.errResult('TODO');
+  try {
+    const result = await
+      (await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', },
+        body: JSON.stringify(data),
+      })).json();
+    if (!result.isOk) {
+      return new Errors.ErrResult(result.errors);
+    }
+    return Errors.okResult(displayFn(result.result))
+  }
+  catch (err) {
+    return Errors.errResult(err);
+  }
 }
 
 /** a type representing scrollable results returned by find* services */
