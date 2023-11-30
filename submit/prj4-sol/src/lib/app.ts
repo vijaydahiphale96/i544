@@ -49,6 +49,7 @@ function showAddSuccessData(rootId: string, successData: {[key: string]: string}
 
 function showFindSuccessData(rootId: string, pagedValues: PagedValues) {
   const ulEle = document.getElementById(rootId + '-results')!;
+  ulEle.innerHTML = '';
   for (const searchDataItem of pagedValues?.values) {
     // const liEle = makeElement('li', {}, '');
     // const dlEle = makeDlElement(searchDataItem);
@@ -96,7 +97,60 @@ function findSensorTypeListener(rootId: string, ws: SensorsWs) {
       displayErrors(rootId, result.errors);
     } else {
       showFindSuccessData(rootId, result?.val);
+      setEventHandlersOnClones(rootId, ws, result?.val?.prev, result?.val?.next);
+      updateScrollControls(rootId, result?.val?.prev, result?.val?.next);
     }
+  });
+}
+
+// Function to handle the click event on the '>>' button
+async function handleScrollClick(event: MouseEvent, rootId: string, ws: SensorsWs, pageLink: string) {
+  event.preventDefault();
+  clearErrors(rootId);
+  // let result = await ws.findSensorTypesByRelLink(pageLink);
+  let result = await ws.findSensorsByRelLink(pageLink);
+  if (!result.isOk) {
+    displayErrors(rootId, result.errors);
+  } else {
+    showFindSuccessData(rootId, result?.val);
+    setEventHandlersOnClones(rootId, ws, result?.val?.prev, result?.val?.next);
+    updateScrollControls(rootId, result?.val?.prev, result?.val?.next);
+  }
+}
+
+function setEventHandlersOnClones(rootId: string, ws: SensorsWs, prev: string = '', next: string = '') {
+  const tabEle = document.getElementById(rootId + '-content')!;
+  const scrollContainer = tabEle.querySelector('.scroll')!;
+  const prevBtns = scrollContainer.querySelectorAll('[rel="prev"]');
+  const nextBtns = scrollContainer.querySelectorAll('[rel="next"]');
+
+  prevBtns.forEach((prevBtn) => {
+    const prevBtnClone = prevBtn.cloneNode(true);
+    prevBtnClone.addEventListener('click', (event: MouseEvent) => handleScrollClick(event, rootId, ws, prev));
+    prevBtn.replaceWith(prevBtnClone);
+  });
+
+  nextBtns.forEach((nextBtn) => {
+    const nextBtnClone = nextBtn.cloneNode(true);
+    nextBtnClone.addEventListener('click', (event: MouseEvent) => handleScrollClick(event, rootId, ws, next));
+    nextBtn.replaceWith(nextBtnClone);
+  });
+}
+
+function updateScrollControls(rootId: string, prev: string | undefined, next: string | undefined) {
+  const tabEle = document.getElementById(rootId + '-content')!;
+  const scrollContainer = tabEle.querySelector('.scroll')!;
+  const prevBtns = scrollContainer.querySelectorAll('[rel="prev"]');
+  const nextBtns = scrollContainer.querySelectorAll('[rel="next"]');
+
+  // Show/hide '<<' buttons based on 'prev' property
+  prevBtns.forEach((prevBtn: HTMLElement) => {
+    setVisibility(prevBtn, !!prev);
+  });
+
+  // Show/hide '>>' buttons based on 'next' property
+  nextBtns.forEach((nextBtn: HTMLElement) => {
+    setVisibility(nextBtn, !!next);
   });
 }
 
@@ -111,6 +165,8 @@ function findSensorsListener(rootId: string, ws: SensorsWs) {
       displayErrors(rootId, result.errors);
     } else {
       showFindSuccessData(rootId, result?.val);
+      setEventHandlersOnClones(rootId, ws, result?.val?.prev, result?.val?.next);
+      updateScrollControls(rootId, result?.val?.prev, result?.val?.next);
     }
   });
 }
